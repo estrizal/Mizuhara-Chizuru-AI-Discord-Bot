@@ -10,7 +10,7 @@ You can talk to the AI powered bot. which has multiple personalities (or you can
 
 - Change the bot's personality:
 
- - **0:** Girlfriend Personality (based on baston model. --thinks she is real girl and not a bot. 100% copy of mizuhara from rent a girlfriend anime) - Will never shy away from controversial statemens. can be rude (only if you are being rude first). 
+ - **0:** Girlfriend Personality (based on baston model. --thinks she is real girl and not a bot. 100% copy of mizuhara from rent a girlfriend anime) - Will never shy away from controversial statements. can be rude (only if you are being rude first). 
  - **1:** Google's Chat GPT (Gemini Pro) --Will generate normal AI like responses. might not share its personal views. 
  - **2:** Chat GPT on Steroids (Bing AI with Internet Access) -- You already know bing ai. 
  - **3** Google's gemini vision model. whenever you reply or tag the bot with image attached, it'll automatically use this personality.
