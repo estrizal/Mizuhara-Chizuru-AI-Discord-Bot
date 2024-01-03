@@ -71,5 +71,23 @@ You can talk to the AI powered bot. which has multiple personalities (or you can
 - The bot is still under development, so expect new and improved features in the future! 
 
 
+**Some examples of personality Zero (GF mode, that will share its opinions. and will refuse to acknowledge it's an AI):- **
 
-THIS IS THE INTRO OF THE BOT. NOW I AM MAKING HER CODE PUBLIC ON GITHUB. TELL ME WHAT TO WRITE IN THE DESCRIPTION.
+![image](https://github.com/estrizal/Mizuhara-Chizuru-AI-Discord-Bot/assets/87994109/dfc31d4e-f6f4-4294-89ac-842fc0037ad0)
+
+![image](https://github.com/estrizal/Mizuhara-Chizuru-AI-Discord-Bot/assets/87994109/2ee5fc0f-3831-47ea-9121-6adce6f778b1)
+
+**Examples of personality 1:- Overall MORE DETAILED. Answers. Will never get into controversies. more professional and smart.:- **
+![image](https://github.com/estrizal/Mizuhara-Chizuru-AI-Discord-Bot/assets/87994109/a3843f6e-ac69-4e4f-88ec-c53f4fc6b4c6)
+
+**Example of personality 2:- Bing AI powered. SUPERRRR SLOWWWWW. But Most Accurate. Use /doubt to ask you query with an image too. doing /doubt automatically shifts personality to 2. :- **
+It has internet access. so you can get latest info. Like yesterday's news.
+![image](https://github.com/estrizal/Mizuhara-Chizuru-AI-Discord-Bot/assets/87994109/945542c0-9225-4250-9437-920df58e30b5)
+
+**Whenever You upload an image, it shifts to personality 3 and answers your query regarding the  image. (you gotta manually shift her mode, as 3 is only meant for image queries. :- **
+
+![image](https://github.com/estrizal/Mizuhara-Chizuru-AI-Discord-Bot/assets/87994109/9f87d113-c735-4277-a522-04df49da1d1b)
+
+**Credits:- ** 
+* FuseFairy's DiscordBot-EdgeGPT - https://github.com/FuseFairy/DiscordBot-EdgeGPT
+* ReEdgeGPT - https://github.com/Integration-Automation/ReEdgeGPT
