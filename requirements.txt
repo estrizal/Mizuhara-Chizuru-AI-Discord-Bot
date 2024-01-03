@@ -1,0 +1,4 @@
+discord.py==2.3.2
+re-edge-gpt==0.0.20
+google-generativeai
+stability_sdk
