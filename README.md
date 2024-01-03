@@ -73,7 +73,8 @@ You can talk to the AI powered bot. which has multiple personalities (or you can
 
 **Some examples of personality Zero (GF mode, that will share its opinions. and will refuse to acknowledge it's an AI):- **
 
-![image](https://github.com/estrizal/Mizuhara-Chizuru-AI-Discord-Bot/assets/87994109/dfc31d4e-f6f4-4294-89ac-842fc0037ad0)
+![image](https://github.com/estrizal/Mizuhara-Chizuru-AI-Discord-Bot/assets/87994109/e6e4557a-b186-45c4-8e15-3560c52ee1a3)
+
 
 ![image](https://github.com/estrizal/Mizuhara-Chizuru-AI-Discord-Bot/assets/87994109/2ee5fc0f-3831-47ea-9121-6adce6f778b1)
 
