@@ -1,19 +1,10 @@
 # Mizuhara-Chizuru-AI-Discord-Bot
-Mizuhara Chizuru Anime character's AI. with multiple features for study servers. can use bing AI for doubts and realtime info. can use google's AI for small and easy doubts. Can use Mizuhara Mode for casual convo (she will never say I am AI. and will respond just like real mizuhara would)
+Mizuhara Chizuru Anime character's AI. based on the jailbroken version of Bing AI. (https://github.com/juzeon/SydneyQt/tree/v1)
 
 **Most Interesting Commands:**
 
-You can talk to the AI powered bot. which has multiple personalities (or you can say AI models). Just by Taggnig the bot. or replying to its messages. Or simply in the dms.
-```
-/personality
-```
+You can talk to the AI powered bot. Just by Taggnig the bot. or replying to its messages. Or simply in the dms.
 
-- Change the bot's personality:
-
- - **0:** Girlfriend Personality (based on baston model. --thinks she is real girl and not a bot. 100% copy of mizuhara from rent a girlfriend anime) - Will never shy away from controversial statements. can be rude (only if you are being rude first). 
- - **1:** Google's Chat GPT (Gemini Pro) --Will generate normal AI like responses. might not share its personal views. 
- - **2:** Chat GPT on Steroids (Bing AI with Internet Access) -- You already know bing ai. 
- - **3** Google's gemini vision model. whenever you reply or tag the bot with image attached, it'll automatically use this personality.
 
 ```
 /doubt
@@ -90,5 +81,5 @@ It has internet access. so you can get latest info. Like yesterday's news.
 ![image](https://github.com/estrizal/Mizuhara-Chizuru-AI-Discord-Bot/assets/87994109/9f87d113-c735-4277-a522-04df49da1d1b)
 
 **Credits:- ** 
-* FuseFairy's DiscordBot-EdgeGPT - https://github.com/FuseFairy/DiscordBot-EdgeGPT
 * ReEdgeGPT - https://github.com/Integration-Automation/ReEdgeGPT
+* SydneyQT - https://github.com/juzeon/SydneyQt/tree/v1
