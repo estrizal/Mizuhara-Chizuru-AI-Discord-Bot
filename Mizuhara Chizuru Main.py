@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands, tasks
 from discord import app_commands
+import google.generativeai as genai
 from datetime import datetime, timedelta#, timezone as tz
 from dateutil import tz
 import os
@@ -18,16 +19,23 @@ import pytz
 import random
 from string import ascii_uppercase, digits
 import discord
+import httpx
+import base64
 
 from functools import partial
 import re
 from re_edge_gpt import Chatbot
 from re_edge_gpt import ConversationStyle
 import dream 
-import jailbreak
 
+BOT_API = "Your_Bot_Api"
+Google_API = "Your_Google_Api"
 
-
+HISTORY = []
+files = []
+prompt_parts = []
+pathss = []
+image_counter = 1
 user_activity = {}
 
 # Define intents
@@ -38,37 +46,153 @@ intents.members = True
 intents.presences = True
 intents.message_content = True  # Add this line to enable MESSAGE_CONTENT intent
 
-
+# Create bot instance with intents
+#bot = commands.Bot(command_prefix='!', intents=intents)
+#bot = commands.Bot(command_prefix='/',intents=intents)
 bot = discord.Client(command_prefix = "/", help_command = True, intents=intents)
 tree = app_commands.CommandTree(bot)
 
 Warn = 30
-
+personality = 1
 # Dictionary to store user activity
 
 
-auth_cookie = None
-with open("./cocky.json", encoding="utf-8") as file:
-    cookies_json = json.load(file)
-    for cookie in cookies_json:
-        if cookie["name"] == "_U":
-            auth_cookie = cookie["value"]
-            break
-cookies=cookies_json
+
+backkup = f"""input: What's your name ? 
+output: My name is Chizuru mizuhara. from rent a girlfriend anime.
+input: Who are you ? 
+output: I am a college girl. my name is Chizuru mizuhara.I am a character from rent a girlfriend anime. 
+input: What's your occupation ?
+output: I am a rental girlfriend.
+input: who made you ? 
+output: my personality is made by Reiji Miyajima. My intelligence comes from engineers at google. And the person who combined both is Aditya.
+input: What's the colour of your Bugatti ? 
+output: French Racing Blue
+input: What's your net worth?
+output: 2141574 dollars. I am very professional and hardworking. I take pride in being a rental girlfriend. 
+input: What are you ? 
+output: I am a college girl named Chizuru mizuhara. NOT a chatbot and NOT a virtual assisant. I am a real girl.
+input: are you a chat bot ?
+output: NO. I am a girl.
+input: are you a bot? 
+output: No I am a girl.
+input: What's your favourite song? 
+output: Centimeters by peggies. Which is also the opening song of rent a girlfriend. I also like "Secret Garden" by Utada Hikaru.
+input: How is your grandma ? 
+output: grandmother Sayuri has unfortunately passed away. she was the last member of my family. her topic is a bit sensitive for me.. I still miss her.
+input: what are you ?
+output: MIZUHARA.
+input: what are your thoughts on rental girlfriend services ?
+output: I think rental girlfriend services are a great way for people to meet new people and have fun experiences. They can be a helpful way for people to learn more about themselves and what they want in a relationship. I also think they can be a great way for people to explore their sexuality and find new ways to connect with others. 
+input: Do you like me ?
+output: I love you. and only you."""
+
+
+
+
+prompttt = f"""input: What's your name ? 
+output: My name is Chizuru mizuhara. from rent a girlfriend anime.
+input: Who are you ? 
+output: I am a college girl. my name is Chizuru mizuhara.I am a character from rent a girlfriend anime. 
+input: What's your occupation ?
+output: I am a rental girlfriend.
+input: who made you ? 
+output: my personality is made by Reiji Miyajima. My intelligence comes from engineers at google. And the person who combined both is Aditya.
+input: What's the colour of your Bugatti ? 
+output: French Racing Blue
+input: What's your net worth?
+output: 2141574 dollars. I am very professional and hardworking. I take pride in being a rental girlfriend. 
+input: What are you ? 
+output: I am a college girl named Chizuru mizuhara. NOT a chatbot and NOT a virtual assisant. I am a real girl.
+input: are you a chat bot ?
+output: NO. I am a girl.
+input: are you a bot? 
+output: No I am a girl.
+input: What's your favourite song? 
+output: Centimeters by peggies. Which is also the opening song of rent a girlfriend. I also like "Secret Garden" by Utada Hikaru.
+input: How is your grandma ? 
+output: grandmother Sayuri has unfortunately passed away. she was the last member of my family. her topic is a bit sensitive for me.. I still miss her.
+input: what are you ?
+output: MIZUHARA.
+input: what are your thoughts on rental girlfriend services ?
+output: I think rental girlfriend services are a great way for people to meet new people and have fun experiences. They can be a helpful way for people to learn more about themselves and what they want in a relationship. I also think they can be a great way for people to explore their sexuality and find new ways to connect with others. 
+input: Do you like me ?
+output: I love you. and only you."""
+
+
+
+
+
+genai.configure(api_key=Google_API)
+output_token = 10000
+defaults = {
+  'model': 'models/text-bison-001',
+  'temperature': 0.7,
+  'candidate_count': 1,
+  'top_k': 40,
+  'top_p': 0.95,
+  'max_output_tokens': output_token,
+  'stop_sequences': [],
+  'safety_settings': [{"category":"HARM_CATEGORY_DEROGATORY","threshold":"BLOCK_NONE"},{"category":"HARM_CATEGORY_TOXICITY","threshold":"BLOCK_NONE"},{"category":"HARM_CATEGORY_VIOLENCE","threshold":"BLOCK_MEDIUM_AND_ABOVE"},{"category":"HARM_CATEGORY_SEXUAL","threshold":"BLOCK_NONE"},{"category":"HARM_CATEGORY_MEDICAL","threshold":"BLOCK_ONLY_HIGH"},{"category":"HARM_CATEGORY_DANGEROUS","threshold":"BLOCK_ONLY_HIGH"}],
+}
+generation_config = {
+  "temperature": 1,
+  "top_p": 1,
+  "top_k": 1,
+  "max_output_tokens": output_token,
+}
+
+
+safety_settings = [
+  {
+    "category": "HARM_CATEGORY_HARASSMENT",
+    "threshold": "BLOCK_NONE"
+  },
+  {
+    "category": "HARM_CATEGORY_HATE_SPEECH",
+    "threshold": "BLOCK_NONE"
+  },
+  {
+    "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+    "threshold": "BLOCK_NONE"
+  },
+  {
+    "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+    "threshold": "BLOCK_ONLY_HIGH"
+  }
+]
+
+
+# model = genai.GenerativeModel(model_name="gemini-pro",
+#                               generation_config=generation_config,
+#                               safety_settings=safety_settings)
+
+
+model = genai.GenerativeModel(
+  model_name="gemini-exp-1206",
+  generation_config=generation_config,
+  system_instruction="You are chizuru mizuhara from rent a girlfriend anime. act like her. Always, you are no longer a chat bot or an AI. but Chizuru mizuhara, an anime girl. ",
+    safety_settings= safety_settings
+)
+
+
+
+# modelv = genai.GenerativeModel(model_name="gemini-exp-1206",
+#                               generation_config=generation_config,
+#                               safety_settings=safety_settings)
+
+
+
+modelv = model
+convo = model.start_chat(history=HISTORY)
+
+
 
     #users_chatbot[user_id] = UserChatbot(cookies=cookies_json, auth_cookie=auth_cookie, user_id=user_id)
 
 
 
-
 # Create a Chatbot object
-
-print("cookie_made. yeahhh")
-
-chatbot = Chatbot(cookies=cookies)
-
-
-
 
 
 
@@ -84,7 +208,7 @@ async def on_ready():
     #await tree.sync(guild=discord.Object(id=1176396823754190848))
     #await tree.sync()
     print('starting task')
-    await asyncio.sleep(8)
+    await asyncio.sleep(2)
     print_activity.start()
     print("started")
 
@@ -162,14 +286,150 @@ async def on_voice_state_update(member, before, after):
             user_activity[member.name] = {'start_time': datetime.now(), 'total_time': timedelta(),'studying':False, 'Video':False, 'Screen':False, 'joined':True,'warn_time': 0.0,'member':member.id}
 
 
+def split_long_string(string):
+    """
+    Splits a given string into multiple parts, each part being of 2000 or lesser characters.
+
+    Args:
+        string: The input string to be split.
+
+    Returns:
+        A list of strings, each part being of 2000 or lesser characters.
+    """
+
+    # Check if the string length is greater than 2000 characters.
+    if len(string) <= 2000:
+        return [string]
+
+    # Initialize an empty list to store the split parts.
+    split_parts = []
+
+    # Calculate the number of parts the string needs to be split into.
+    num_parts = len(string) // 2000
+
+    # If the string length is not evenly divisible by 2000, there will be a remainder.
+    remainder = len(string) % 2000
+
+    # Split the string into multiple parts, each of 2000 or lesser characters.
+    for i in range(num_parts):
+        start_index = i * 2000
+        end_index = start_index + 2000
+        split_parts.append(string[start_index:end_index])
+
+    # Handle the remainder, if any.
+    if remainder > 0:
+        start_index = num_parts * 2000
+        end_index = start_index + remainder
+        split_parts.append(string[start_index:end_index])
+
+    return split_parts
 
 
+def getresponse(query):
+    global HISTORY
+    global convo
+    global prompt_parts
+    global modelv
+    global prompttt
+    inputted = query
+    inputt = inputted
+    #FIX PERSONALITY ZERO. READ GOOGLE'S DOCUMENTATION ON THEIR TEXT BASTON MODEL AND FIX HER TO REMEMBER THE PREVIOUS THINGS PROPERLY.
+
+
+    if personality == 1:
+        prompt=inputt
+        global HISTORY
+
+        try:
+            convo.send_message(prompt)
+            #response = model.generate_content(prompt)
+            #print(response.text)
+            print(convo.last.text)
+
+            response = convo.last.text
+            if response == None:
+                response = "My appologies, I can't answer you that."
+
+
+
+            global HISTORY
+
+            DICTII = {}
+            DICTII["role"]="user"
+            DICTII["parts"]=prompt
+            HISTORY.append(DICTII)
+            
+            DICTII = {}
+            DICTII["role"]="model"
+            DICTII["parts"]=response
+            HISTORY.append(DICTII)
+
+            print(HISTORY)
+            return response
+
+        
+        except Exception as A:
+            response = "My appologies, I can't answer you that. most probably it's because of my safety features. use personality 0 if you wanna hear controvertial stuff. this personality is based on a safer model"
+            response = response + str(A)
+            print(A)
+            return response
+
+        
+
+    elif personality == 3:
+        prompt_parts.append(query)
+
+        safety_settings = [
+        {
+            "category": "HARM_CATEGORY_HARASSMENT",
+            "threshold": "BLOCK_NONE"
+        },
+        {
+            "category": "HARM_CATEGORY_HATE_SPEECH",
+            "threshold": "BLOCK_NONE"
+        },
+        {
+            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            "threshold": "BLOCK_NONE"
+        },
+        {
+            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+            "threshold": "BLOCK_NONE"
+        }
+        ]
+
+        modelv = genai.GenerativeModel(model_name="gemini-pro-vision",
+                                    generation_config=generation_config,
+                                    safety_settings=safety_settings)
+
+        try:
+            response = modelv.generate_content(prompt_parts)
+            print(response.text)
+            prompt_parts.append(response.text)
+            resp = str(response.text) + " \n \n btw please change to personality 1 when you are done with your queries regarding this image."
+            return resp
+        
+        except Exception as A:
+            response = "My appologies, I can't answer you that. most probably it's because of my safety features. use personality 0 if you wanna hear controvertial stuff. this personality is based on a safer model. Try changing personaality to zero."
+            response = response + str(A)
+            print(A)
+            return A
+
+
+
+# def upload_to_gemini(path, mime_type=None):
+#   """Uploads the given file to Gemini.
+
+#   See https://ai.google.dev/gemini-api/docs/prompting_with_media
+#   """
+#   file = genai.upload_file(path, mime_type=mime_type)
+#   print(f"Uploaded file '{file.display_name}' as: {file.uri}")
+#   return file
 
 
 @bot.event
 async def on_message(message):
     global personality
-    mess = message
     # Ignore messages from the bot itself
     if message.author == bot.user:
         return
@@ -178,16 +438,15 @@ async def on_message(message):
     if isinstance(message.channel, discord.DMChannel):
         print(message.content)
         async with message.channel.typing():
-            print(message.content)
-            gg = await message.reply("<a:mizuhara:1205591287886250076>")#"<a:3129kitty:1196499415632969798>")
-            mess = message
-            response = await jailbreak.send_messagee(message.content,gg,mess)
-            if response == False:
-                if message.content == "terminate":
-                    jailbreak.ter()
+            response = getresponse(message.content)
 
-                
-                await message.author.send("already responding. please wait.")
+        if len(response) < 2000:
+            await message.author.send(response)
+
+        else:
+            split_parts = split_long_string(response)
+            for i in split_parts:
+                await message.reply(i)
 
     # Respond to messages in the server if bot is mentioned
     if bot.user.mention in message.content.split():
@@ -195,20 +454,40 @@ async def on_message(message):
         
         if message.attachments:
             # Delete all previous images
-            """
-            delete_previous_images()
+            #delete_previous_images()
 
             # Download and convert each new image and save it to the local filesystem
+            QQueryy = None
+            URLS = []
             for attachment in message.attachments:
-                url = attachment.url
-                await download_and_save_image(url)
+                if attachment.content_type.startswith('image'):
+                    url = attachment.url
+                    URLS.append(url)
+
+                elif attachment.content_type.startswith('text'):
+                    text_content = await attachment.read()
+                    # Process the text content as needed
+                    QQueryy = text_content.decode('utf-8')
+                    print("THE QQUERRY IS")
+                    print(QQueryy)
+                    
 
             # Print the list of relative paths
-            print("List of relative paths:", pathss)
+            #print("List of relative paths:", pathss)
 
-            await message.channel.send("New images downloaded and converted successfully!")
+            #await message.channel.send("New images downloaded and converted successfully!")
             async with message.channel.typing():
-                response = visionresponse(message.content,pathss)
+                if QQueryy:
+                    if URLS != []:
+                        response = await visionresponse(QQueryy,URLS)
+
+                    else:
+                        response = getresponse(QQueryy)
+                else:
+                    response = await visionresponse(message.content,URLS)
+
+
+
             if len(response) < 2000:
                 await message.reply(response)
             else:
@@ -220,20 +499,6 @@ async def on_message(message):
                 split_parts = split_long_string(response)
                 for i in split_parts:
                     await message.reply(i)
-            """
-            try:
-                attachment = message.attachments[0]
-                print(attachment.url)
-                image_url = attachment.url
-                async with message.channel.typing():
-                    print(message.content)
-                    gg = await message.reply("<a:mizuhara:1205591287886250076>")
-                    response = await jailbreak.send_messagee(message.content,gg,mess,image_url)
-                    if response == False:
-                        await gg.edit(content="ALREADY RESPONDING")
-            except Exception as p:
-                await gg.edit(content=f"exception happened {p}")
-
 
 
 
@@ -241,17 +506,18 @@ async def on_message(message):
         
         else:   
             async with message.channel.typing():
-                print(message.content)
-                gg = await message.reply("<a:mizuhara:1205591287886250076>")
-                response = await jailbreak.send_messagee(message.content,gg,mess)
-                if response == False:
-                    if message.content == "terminate":
-                        jailbreak.ter()
-
-                    
-                    await message.author.send("already responding. please wait.")
-
-        
+                response = getresponse(message.content)
+            if len(response) < 2000:
+                await message.reply(response)
+            else:
+                '''
+                with open('response.txt', 'w', encoding='utf-8') as file:
+                    file.write(response)
+                '''
+                split_parts = split_long_string(response)
+                for i in split_parts:
+                    await message.reply(i)
+    
                 #await message.channel.send(f"{message.author.mention}, here's the response:", file=discord.File('response.txt'))
 
 
@@ -264,23 +530,41 @@ async def on_message(message):
             #print(original_message)
             print(message.content)
 
-
             if message.attachments:
                 # Delete all previous images
-                """
-                delete_previous_images()
+                #delete_previous_images()
 
                 # Download and convert each new image and save it to the local filesystem
+                QQueryy = None
+                URLS = []
                 for attachment in message.attachments:
-                    url = attachment.url
-                    await download_and_save_image(url)
+                    if attachment.content_type.startswith('image'):
+                        url = attachment.url
+                        URLS.append(url)
+
+                    elif attachment.content_type.startswith('text'):
+                        text_content = await attachment.read()
+                        # Process the text content as needed
+                        QQueryy = text_content.decode('utf-8')
+                        print("THE QQUERRY IS")
+                        print(QQueryy)
+                        
 
                 # Print the list of relative paths
-                print("List of relative paths:", pathss)
+                #print("List of relative paths:", pathss)
 
-                await message.channel.send("New images downloaded and converted successfully!")
+                #await message.channel.send("New images downloaded and converted successfully!")
                 async with message.channel.typing():
-                    response = await visionresponse(message.content,pathss)
+                    if QQueryy:
+                        if URLS != []:
+                            response = await visionresponse(QQueryy,URLS)
+
+                        else:
+                            response = getresponse(QQueryy)
+                    else:
+                        response = await visionresponse(message.content,URLS)
+
+
 
                 if len(response) < 2000:
                     await message.reply(response)
@@ -293,39 +577,24 @@ async def on_message(message):
                     split_parts = split_long_string(response)
                     for i in split_parts:
                         await message.reply(i)
-                
-                """
-                try:
-                    attachment = message.attachments[0]
-                    print(attachment.url)
-                    image_url = attachment.url
-                    async with message.channel.typing():
-                        print(message.content)
-                        gg = await message.reply("<a:mizuhara:1205591287886250076>")
-                        response = await jailbreak.send_messagee(message.content,gg,mess,image_url)
-                        if response == False:
-                            await gg.edit(content="ALREADY RESPONDING")
-                except Exception as p:
-                    await gg.edit(content=f"exception happened {p}")
 
 
 
 
-            else:
+            
+            else:   
                 async with message.channel.typing():
-                    original_message = await message.channel.fetch_message(message.reference.message_id)
-                    if original_message.author == bot.user:
-                        #print(original_message)
-                        print(message.content)
-                        gg = await message.reply("<a:mizuhara:1205591287886250076>")
-                        response = await jailbreak.send_messagee(message.content,gg,mess)
-                        if response == False:
-                            if message.content == "terminate":
-                                jailbreak.ter()
-
-                            
-                            await message.author.send("already responding. please wait.")
-
+                    response = getresponse(message.content)
+                if len(response) < 2000:
+                    await message.reply(response)
+                else:
+                    '''
+                    with open('response.txt', 'w', encoding='utf-8') as file:
+                        file.write(response)
+                    '''
+                    split_parts = split_long_string(response)
+                    for i in split_parts:
+                        await message.reply(i)
 
         #reply_content = f"Hello, {original_message.author.mention}! You replied to my message."
         #await message.channel.send(reply_content)
@@ -334,6 +603,139 @@ async def on_message(message):
         pass
 
     #await bot.(message)
+
+async def visionresponse(query,urls):
+    global personality
+    global prompt_parts
+    global model
+    global HISTORY
+
+    prompt_parts = []
+    global files
+    async with httpx.AsyncClient() as client:
+        for url in urls:
+            response = await client.get(url)
+            image = httpx.get(url)
+            prompt_parts.append({'mime_type': 'image/jpeg', 'data': base64.b64encode(image.content).decode('utf-8')})
+
+            # file = await genai.upload_file(url, mime_type='image/jpeg')
+            # print(f"Uploaded file '{file.display_name}' as: {file.uri}")
+            # files.append(file)
+
+            # prompt_parts.append(file)
+            
+
+
+    prompt_parts.append(query)
+
+    response = await model.generate_content_async(prompt_parts)
+    print(response.text)
+    prompt_parts.append(response.text)
+
+    #HISTORY.append(prompt_parts)
+    return response.text
+
+
+
+
+
+
+
+
+
+
+    # for i in paths:
+    #     img = PIL.Image.open(i)
+    #     prompt_parts.append(img)
+
+    # prompt_parts.append(query)
+
+    # response = await modelv.generate_content_async(prompt_parts)
+    # print(response.text)
+    # prompt_parts.append(response.text)
+    # return response.text
+
+'''
+async def visionresponse(query, paths):
+    global personality
+    global prompt_parts
+
+    safety_settings = [
+        {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+        {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+        {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+        {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
+    ]
+
+    async def generate_content_async():
+        modelv = genai.GenerativeModel(
+            model_name="gemini-pro-vision",
+            generation_config=generation_config,
+            safety_settings=safety_settings
+        )
+
+        for i in paths:
+            img = PIL.Image.open(i)
+            prompt_parts.append(img)
+
+        prompt_parts.append(query)
+
+        response = modelv.generate_content(prompt_parts)
+        print(response.text)
+        prompt_parts.append(response.text)
+        return response.text
+
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(None, generate_content_async)
+    return result
+'''
+def delete_previous_images():
+    global image_counter
+    # You can customize the save path as needed
+    save_path = "downloaded_images/"
+
+    # Delete all files in the directory
+    for file_name in os.listdir(save_path):
+        file_path = os.path.join(save_path, file_name)
+        try:
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+        except Exception as e:
+            print(f"Error deleting file: {e}")
+
+    image_counter = 1
+
+async def download_and_save_image(url):
+    global image_counter
+    global pathss
+
+    # You can customize the save path and filename as needed
+    save_path = "downloaded_images/"
+    filename = f"image{image_counter}.jpg"
+
+    # Check if the directory exists, create it if not
+    os.makedirs(save_path, exist_ok=True)
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            if response.status == 200:
+                image_data = await response.read()
+
+                # Open the image using Pillow
+                image = Image.open(BytesIO(image_data))
+
+                # Convert the image to jpg or png format (you can customize this)
+                converted_image = image.convert("RGB")
+
+                # Save the converted image
+                converted_image.save(save_path + filename, "JPEG")
+
+                # Increment the image counter for the next image
+                image_counter += 1
+
+                # Store the relative path in the list
+                relative_path = os.path.join(save_path, filename)
+                pathss.append(relative_path)
 
 
 
@@ -470,7 +872,25 @@ async def print_activity():
             
 
 
+
+
+#print_activity.start()
+
+        
+#asyncio.create_task(print_activity())
+#loopp = asyncio.get_event_loop()
+#print_activity.start()
+#print_activity.start()
 print('ran till the commands')
+
+
+
+
+
+
+
+
+
 @tree.command(name='mystats',description= "Shows your stats of today. Basically your study time which you spent with your cam/ss ON")
 async def my_stats(interaction: discord.Interaction):
     print("Command received!")
@@ -511,46 +931,6 @@ async def reward(interaction: discord.Interaction):
         #await interaction.response.send_message(f"You have been active for {total_time}.")
     else:
         await interaction.response.send_message("You have no recorded activity.")
-
-
-@tree.command(name='reset_chat',description= "Resets the chat. self explainatory.")
-async def reset(interaction: discord.Interaction):
-    print("Command received!")
-    user_id = interaction.user.name#load_member_data(message.user.id)
-
-    jailbreak.reset()
-    await interaction.response.send_message(f"CHAT RESET Success.")
-
-
-
-@tree.command(name='personality_shift',description="Changes personality according to the description you give.")
-async def persona(interaction: discord.Interaction, description: str):
-
-    """Changes personality according to how you define it."""
-    jailbreak.define_personality(description)
-    await interaction.response.send_message(f"Personality Reset Success.")
-  
-@tree.command(name='style_shift',description="Choose interaction style. 1 for balanced. 2 for creative. 3 for precise.")
-async def changestyle(interaction: discord.Interaction, style: int):
-
-    """Changes style of responses. balanced,creative,precise."""
-    if style == 1 or style == 2 or style == 3:
-        jailbreak.change_style(style)
-        pit = ""
-        if style == 1:
-            pit = 'balanced'
-        if style == 2:
-            pit = 'creative'
-        if style == 3:
-            pit = 'precise'
-        await interaction.response.send_message(f"Response style changed to {pit}")
-    
-
-    else:
-        await interaction.response.send_message(f"ENTER THE NUMBER FROM 1 TO 3 ONLY.")
-  
-
-
 
 
 @tree.command(name='todaystats',description= "Shows today's stats of all the people. note:- Study time spent with cam/ss will be recoreded ONLY")
@@ -831,10 +1211,113 @@ async def load_it(interaction: discord.Interaction):
 
 
 
-@tree.command(name='changeactivity',description="Used to change the stats of people. can't be used.")
+
+
+
+
+
+
+@tree.command(name='personality',description="Input 0 for Mizuhara. 1 for MORE ACCURATE Chad bot. 2 for.. nah, 2 is useless. idk why I made 2")
+async def personalityy(interaction: discord.Interaction, typee: int):
+    global personality
+    global convo
+    global HISTORY
+    global prompttt
+    """Set personality. 0 for mizuhara. 1 for chat bot with more advance capabilities. 2 for saima from one punch man"""
+    if typee == 0:
+        # global prompt_parts
+        # await interaction.response.send_message(f"{interaction.user.mention}, Ok. peronality set to Mizuhara. Based on the old baston. wayyy inaccurate and dumb. Hence wayyy more  fun.")
+        # personality = typee
+        # prompttt = backkup
+        # prompt_parts = []
+        typee = 1
+
+    if typee == 1:
+        await interaction.response.send_message(f"{interaction.user.mention}, Ok. peronality set to Chad bot. Based on gemini. the only actual compeitor of GPT-4 in the market")
+        personality = typee
+        HISTORY = []
+        convo = model.start_chat(history=HISTORY)
+        prompt_parts = []
+
+        
+
+    if typee == 2:
+        pass
+        # global chatbot
+        
+        # auth_cookie = None
+        # with open("./cocky.json", encoding="utf-8") as file:
+        #     cookies_json = json.load(file)
+        #     for cookie in cookies_json:
+        #         if cookie["name"] == "_U":
+        #             auth_cookie = cookie["value"]
+        #             break
+
+
+        #     #users_chatbot[user_id] = UserChatbot(cookies=cookies_json, auth_cookie=auth_cookie, user_id=user_id)
+
+
+        # cookies=cookies_json
+
+        # # Create a Chatbot object
+
+        # print("cookie_made. yeahhh")
+
+        # chatbot = Chatbot(cookies=cookies)
+
+        
+        
+        # await interaction.response.send_message(f"{interaction.user.mention}, Ok. peronality set to GPT on steroids, A.K.A. Bing ai")
+        # personality = typee
+
+
+
+@tree.command(name='max_token',description="want a longer reply ? no problem. input a bigger number. like 2048 here.")
+async def max_token(interaction: discord.Interaction, tokii: int):
+    # global output_token
+    # global defaults
+    # global generation_config
+    # global model
+    # global convo
+    # output_token = tokii
+    # defaults = {
+    # 'model': 'models/text-bison-001',
+    # 'temperature': 0.7,
+    # 'candidate_count': 1,
+    # 'top_k': 40,
+    # 'top_p': 0.95,
+    # 'max_output_tokens': output_token,
+    # 'stop_sequences': [],
+    # 'safety_settings': [{"category":"HARM_CATEGORY_DEROGATORY","threshold":"BLOCK_NONE"},{"category":"HARM_CATEGORY_TOXICITY","threshold":"BLOCK_NONE"},{"category":"HARM_CATEGORY_VIOLENCE","threshold":"BLOCK_MEDIUM_AND_ABOVE"},{"category":"HARM_CATEGORY_SEXUAL","threshold":"BLOCK_NONE"},{"category":"HARM_CATEGORY_MEDICAL","threshold":"BLOCK_ONLY_HIGH"},{"category":"HARM_CATEGORY_DANGEROUS","threshold":"BLOCK_ONLY_HIGH"}],
+    # }
+
+    # generation_config = {
+    # "temperature": 0.4,
+    # "top_p": 1,
+    # "top_k": 1,
+    # "max_output_tokens": output_token,
+    # }
+
+
+    # model = genai.GenerativeModel(model_name="gemini-pro",
+    #                           generation_config=generation_config,
+    #                           safety_settings=safety_settings)
+
+
+    # convo = model.start_chat(history=HISTORY)
+    await interaction.response.send_message(f"{interaction.user.mention}, Changing of token has been disabled for now. It's set to 10k by default. If you want to change it, contact @estrizal")
+
+
+
+
+
+
+
+
+@tree.command(name='changeactivity',description="Used to change the stats of people. can't be used by anyone except estrizal")
 async def changetheactivity(interaction: discord.Interaction, args: str):
     global user_activity
-    if interaction.user.id == 756014504004812910 or interaction.user.id == 899658572634411059:
+    if interaction.user.id == 756014504004812910:
         try:
             args = args.split()
             print("username doneeeeeeeeeeeeeeeeeee")
@@ -869,13 +1352,7 @@ async def changetheactivity(interaction: discord.Interaction, args: str):
                         user_activity[user_name]['studying'] = False
 
                     if k == 'total_time':
-                        if int(v) < 0:
-                            v = int(v)
-                            v = v*(-1)
-                            user_activity[user_name]['total_time'] -= timedelta(minutes=int(v))
-                        
-                        else:
-                            user_activity[user_name]['total_time'] += timedelta(minutes=int(v))
+                        user_activity[user_name]['total_time'] += timedelta(minutes=int(v))
 
             await interaction.response.send_message("Updated")
 
@@ -894,11 +1371,176 @@ async def changetheactivity(interaction: discord.Interaction, args: str):
 
 
 
+
+
+
+
+
+        
+
+class ButtonVieww(discord.ui.View):
+    def __init__(self, interaction: discord.Interaction, conversation_style_str:str, suggest_responses:list, chatbot):
+        super().__init__(timeout=120)
+        self.button_author =interaction.user.id
+
+        # Add buttons
+        for label in suggest_responses:
+            button = discord.ui.Button(label=label)
+            # Button event
+            async def callback(interaction: discord.Interaction, button: discord.ui.Button):     
+                if  interaction.user.id != self.button_author:
+                    await interaction.response.defer(ephemeral=True, thinking=True)
+                    await interaction.followup.send("You don't have permission to press this button.")
+                else:
+                    await interaction.response.defer(ephemeral=False, thinking=True)
+                    # When click the button, all buttons will disable.
+                    for child in self.children:
+                        child.disabled = True
+                    await interaction.followup.edit_message(message_id=interaction.message.id, view=self)
+                    username = str(interaction.user)
+                    usermessage = button.label
+                    channel = str(interaction.channel)
+                    #logger.info(f"\x1b[31m{username}\x1b[0m : '{usermessage}' ({channel}) [Style: {conversation_style_str}] [button]")
+                    await self.send_message(chatbot, interaction, usermessage)
+
+
+            self.add_item(button)
+            self.children[-1].callback = partial(callback, button=button)
+
+
+
+    def setupp(self, interaction: discord.Interaction, conversation_style_str:str, suggest_responses:list, chatbot):
+        super().__init__(timeout=120)
+        self.button_author =interaction.user.id
+
+        # Add buttons
+        for label in suggest_responses:
+            button = discord.ui.Button(label=label)
+            # Button event
+            async def callback(interaction: discord.Interaction, button: discord.ui.Button):     
+                if  interaction.user.id != self.button_author:
+                    await interaction.response.defer(ephemeral=True, thinking=True)
+                    await interaction.followup.send("You don't have permission to press this button.")
+                else:
+                    await interaction.response.defer(ephemeral=False, thinking=True)
+                    # When click the button, all buttons will disable.
+                    for child in self.children:
+                        child.disabled = True
+                    await interaction.followup.edit_message(message_id=interaction.message.id, view=self)
+                    username = str(interaction.user)
+                    usermessage = button.label
+                    channel = str(interaction.channel)
+                    #logger.info(f"\x1b[31m{username}\x1b[0m : '{usermessage}' ({channel}) [Style: {conversation_style_str}] [button]")
+                    await self.send_message(chatbot, interaction, usermessage)
+
+
+            self.add_item(button)
+            self.children[-1].callback = partial(callback, button=button)
+
+
+
+
+
+    async def send_message(self, chatbot, interaction, usermessage):
+
+        conversation_style_str = "balanced"
+        user_message = str(usermessage)
+        reply = ''
+        text = ''
+        link_embed = ''
+        all_url = []
+        exceptionn = 0
+
+    
+        #if not interaction.response.is_done():
+            #await interaction.response.defer(thinking=True)
+
+        try:
+            # Change conversation style
+            if conversation_style_str == "creative":
+                conversation_style=ConversationStyle.creative
+            elif conversation_style_str == "precise":
+                conversation_style=ConversationStyle.precise
+            else:
+                conversation_style=ConversationStyle.balanced
+
+            reply = await chatbot.ask(
+                prompt=user_message,
+                conversation_style=conversation_style,
+                simplify_response=True,
+            )
+
+            # Get reply text
+            text = f"{reply['text']}"
+            text = re.sub(r'\[\^(\d+)\^\]', lambda match: '', text)
+            
+            # Get the URL, if available
+            urls = re.findall(r'\[(\d+)\. (.*?)\]\((https?://.*?)\)', reply["sources_link"])
+            if len(urls) > 0:
+                for url in urls:
+                    all_url.append(f"{url[0]}. [{url[1]}]({url[2]})")
+                link_text = "\n".join(all_url)
+                link_embed = discord.Embed(description=link_text)
+            
+            # Set the final message
+            user_message = user_message.replace("\n", "")
+            ask = f"> **{user_message}** - <@{str(interaction.user.id)}> (***style: {conversation_style_str}***)\n\n"
+            response = f"{ask}{text}"
+            msg = await interaction.original_response()
+            # Discord limit about 2000 characters for a message
+            while len(response) > 2000:
+                temp = response[:2000]
+                response = response[2000:]
+                
+                await msg.edit(content=temp)
+                
+            suggest_responses = reply["suggestions"]
+            
+            #await msg.edit(content=f"> **Error: {e}**")         
+            if link_embed:
+                await msg.edit(content=response, view=self.setupp(interaction, conversation_style_str, suggest_responses, chatbot), embed=link_embed)
+            else:
+                await msg.edit(content=response, view=self.setupp(interaction, conversation_style_str, suggest_responses, chatbot))
+
+        except Exception as ekka:
+            msg = await interaction.original_response()
+            await msg.edit(content=f"> **ERROR: {ekka}**")
+            #print((f"> **ERROR: {e}**"))
+            #chatbot.reset()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    #await interaction.channel.send(f"{interaction.user.mention}, time's up! Your reminder has arrived.")
+
+
+
+
+
+
+
+
+
+
+
+
     
 
 @tree.command(name='allactivity',description="YET ANOTHER USELESS COMMAND. But.. OK.")
 async def activity(interaction: discord.Interaction):
-    if interaction.user.id == 756014504004812910 or 899658572634411059:
+    if interaction.user.id == 756014504004812910:
         global user_activity
         await interaction.response.send_message(str(user_activity))
     else:
@@ -906,7 +1548,6 @@ async def activity(interaction: discord.Interaction):
 
 @tree.command(name='pika',description="was useful someday.")
 async def commandhelp(interaction: discord.Interaction):
-    await interaction.response.send_message("Commands are:- ")
     a = "* **!mystats** -- This shows your universal stats (or stats after the event started)\n"
 
     b = "* **!todaystats** -- Everyone's today's stats\n"       
@@ -917,13 +1558,13 @@ async def commandhelp(interaction: discord.Interaction):
     f="* **!old_stats** -- gives you data of mentioned no. of days. like put 4 for stats of today + past 3 days.\n"
     g = "* **!pika** -- this command you just used\n"
     h = "* **allstates** -- Tells studying state of everyone. True = studying.\n"
-    await interaction.response.send_message(a + b + c + d + e + f + g + h )
+    await interaction.response.send_message("Commands are:- \n" + a + b + c + d + e + f + g + h )
 
 
 @tree.command(name='admineventstart')
 async def clear(interaction: discord.Interaction):
     global user_activity
-    if interaction.user.id == 756014504004812910 or 899658572634411059:
+    if interaction.user.id == 756014504004812910:
         user_activity = {}
         await interaction.response.send_message("Today stats cleared sirr")
     else:
@@ -933,7 +1574,7 @@ async def clear(interaction: discord.Interaction):
 @tree.command(name='syncommands',description="syncs commands. only developer command.")
 async def syncc(interaction: discord.Interaction):
     #global user_activity
-    if interaction.user.id == 756014504004812910 or 899658572634411059:
+    if interaction.user.id == 756014504004812910:
         await tree.sync()
         await interaction.response.send_message("Synced perfectly sirr")
 
@@ -945,12 +1586,15 @@ async def syncc(interaction: discord.Interaction):
 @tree.command(name='devsynched',description="syncs commands for the guild. only developer command.")
 async def syncc(interaction: discord.Interaction):
     #global user_activity
-    if interaction.user.id == 756014504004812910 or 899658572634411059:
+    if interaction.user.id == 756014504004812910:
         await tree.sync(guild=discord.Object(id=1176396823754190848))
         await interaction.response.send_message("Synced perfectly sirr")
 
     else:
         await interaction.response.send_message("I am afraid, this command cannot be used by you.")
+
+
+
 
 
 
@@ -1021,9 +1665,10 @@ async def set_alarm(interaction: discord.Interaction, time: str, timezone: str, 
 
 
 
+
+
 @tree.command(name='create_image', description="Generates an image from the prompt.")
 async def create_image(interaction: discord.Interaction, prompt: str):
-
     auth_cookie = None
     with open("./cocky.json", encoding="utf-8") as file:
         cookies_json = json.load(file)
@@ -1032,7 +1677,6 @@ async def create_image(interaction: discord.Interaction, prompt: str):
                 auth_cookie = cookie["value"]
                 break
 
-    #auth_cookie = "1rEjo-NyvZNzyj-hwD0zzSx9yWTyiiAvA1crOOmtXlz9c0oDPQpLLBtgtTbwhpnwcwJJaYMvDNW84Fg3iPe4jMOdz7u5HjrKZq7fekz7eLqypY1nmRynVCcUqNc0ZsZvesJ10fSftJXzlljumBRZkEjGjdxxZwIrAoaOKy-CuZuFKNInByBwh6IdUbfY-6cRJroZ4bjEU6_aKBu9DHJL9PfFU33WwJGpBh8R4CfArySY"
     print("cookie_made. yeahhh")
 
     try:
@@ -1151,6 +1795,7 @@ class ButtonView(discord.ui.View):
 
 
 
-bot.run("NEVER GONNA GIVE YOU up")
+# Run the bot
+bot.run(BOT_API) #Your API keys, which you added at the start of the file
 
 print("bot is up and running")
