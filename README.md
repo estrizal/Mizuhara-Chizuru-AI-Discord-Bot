@@ -64,7 +64,8 @@ You can talk to the AI powered bot. Just by Taggnig the bot. or replying to its 
 
 **Some examples of personality Zero (GF mode, that will share its opinions. and will refuse to acknowledge it's an AI):- **
 
-![image](https://github.com/estrizal/Mizuhara-Chizuru-AI-Discord-Bot/assets/87994109/e6e4557a-b186-45c4-8e15-3560c52ee1a3)
+<img width="685" height="895" alt="image" src="https://github.com/user-attachments/assets/8919aa2b-f3bd-4c1d-925a-e2c7106e3b3c" />
+
 
 
 ![image](https://github.com/estrizal/Mizuhara-Chizuru-AI-Discord-Bot/assets/87994109/2ee5fc0f-3831-47ea-9121-6adce6f778b1)
