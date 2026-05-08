@@ -68,7 +68,8 @@ You can talk to the AI powered bot. Just by Taggnig the bot. or replying to its 
 
 
 
-![image](https://github.com/estrizal/Mizuhara-Chizuru-AI-Discord-Bot/assets/87994109/2ee5fc0f-3831-47ea-9121-6adce6f778b1)
+![image](https://github.com/user-attachments/assets/28efbc09-84d6-417e-98d9-0c1c46f9462a)
+
 
 **Examples of personality 1:- Overall MORE DETAILED. Answers. Will never get into controversies. more professional and smart.:- **
 ![image](https://github.com/estrizal/Mizuhara-Chizuru-AI-Discord-Bot/assets/87994109/a3843f6e-ac69-4e4f-88ec-c53f4fc6b4c6)
