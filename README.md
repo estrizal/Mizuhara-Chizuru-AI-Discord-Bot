@@ -64,7 +64,7 @@ You can talk to the AI powered bot. Just by Taggnig the bot. or replying to its 
 
 **Some examples of personality Zero (GF mode, that will share its opinions. and will refuse to acknowledge it's an AI):- **
 
-<img width="685" height="895" alt="image" src="https://github.com/user-attachments/assets/8919aa2b-f3bd-4c1d-925a-e2c7106e3b3c" />
+
 
 
 
